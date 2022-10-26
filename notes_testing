@@ -1,0 +1,114 @@
+step 1:
+    pip install pytest
+    pip install requests
+    made a directory tests
+    added test_userroute.py
+        side note:
+            to get path of the file we can
+                code:
+                    import os
+                    import sys
+                    print(os.path.abspath(__file__))
+                        #gives out path:
+                            o/p= x/y/z.py
+                    print(__file__)
+                        #gives out file name
+                            o/p= z.py
+                    print(os.path.dirname(os.path.abspath(__file__)))
+                        #gives out dir structure of current file z.py
+                            1:o/p= x/y
+                    print(os.path.dirname(os.path.dirname((os.path.abspath(__file__))))
+                        #gives directory where y is from 1:o/p:
+                            x
+        /sidenote:
+
+    added test_userroute.py
+    import os
+    import sys
+
+    import TestClient from fastapi.testclient
+    import json
+    def:
+        client = TestClient()
+
+    and the following
+        code:
+            from fastapi.testclient import TestClient
+            import json
+
+            import os
+            import sys
+
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            ##we imported os and sys and gave above command to get the path of main
+            ##do it before calling main to let know where it resides
+
+            from main import app
+
+
+            client = TestClient(app)
+
+
+            def test_create_user():
+                data = {"email": "test1@email.com", "password": "test1"}
+                    #providing dummy data
+                response = client.post("/users", json.dumps(data))
+                    #gives above data in json format
+                ##now we check the o/p using assert
+                assert response.status_code == 200
+                    #200 ok aaucha thei ho
+                assert response.json()["email"] == "test1@email.com"
+                    #email match check
+                assert response.json()["is_active"] == True
+                    #is_active bool ho, thei check
+                pass
+
+
+        o/p:
+            collected 1 item
+
+            tests/test_userroute.py::test_create_user PASSED                      [100%]
+
+            ============================ 1 passed in 1.28s =============================
+
+
+step 2:
+    Testing Database:
+        here we need to use new db(sqlite), can`t use production db(postgresql)
+    in test_userroutes.py add following
+        code:
+            from sqlalchemy import create_engine
+            from sqlalchemy.orm import sessionmaker
+            from database import Base, get_db
+
+            SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+            engine = create_engine(
+                SQLALCHEMY_DATABASE_URL,
+                connect_args={"check_same_thread":False}
+            )
+
+            TestingSessionLocal = sessionmaker(
+                autocommit=False,
+                autoflush=False,
+                bind=engine
+            )
+
+            Base.metadata.create_all(bind=engine)
+
+    we have get_db in database.py
+        so,
+          we need to override the session
+            below client = TestClient(),
+                def override_get_db():
+                    try:
+                        db = TestingSessionLocal()
+                            ## created db object
+                        yield db
+                            ## return db
+                    finally:
+                        db.close()
+
+
+                app.dependency_overrides[get_db] = override_get_db()
+                    #thyo get_db database bata bolako cha tara yeta ko use garnu
+

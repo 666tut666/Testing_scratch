@@ -1,0 +1,337 @@
+step 1:
+    initial:
+        app = FastAPI(
+            title="MyAPI",
+            description=description,
+            version="0.0.1",
+            contact = {
+                "name": "User",
+                "email": "mail@email.com"
+            },
+            openapi_tags=tags,
+            openapi_url="/api/v1/openapi.json",
+
+        )
+        yesma:
+
+                app=FastAPI() ma::
+                    doc_url="[str]" lae localhost:8000/docs lai localhost:8000/[str]
+                    redoc_url="[str]" lae localhost:8000/redoc lai localhost:8000/[str]
+                        dubai ma =None halyo bhane dubai disable huncha
+                    title to change title
+                    version ofcs version
+                    contact ma email clickable hudo raicha
+                    penapi_tags lae tag har banaucha
+
+
+step 2:
+    .env ma postgres ko name,pw..... haliyo
+        yesma:
+            POSTGRES_USER=postgres
+            POSTGRES_PASSWORD=apple123
+            POSTGRES_SERVER=localhost
+            POSTGRES_PORT=5432
+
+step 3:
+    config ma postgres ko info haliyo
+        yesma:
+            POSTGRES_USER = os.getenv("POSTGRES_USER")
+                os.getenv pulls pull env variable from .env
+                it loads from .env file rather than system
+            POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+            POSTGRES_SERVER = os.getenv("POSTGRES_SERVER", "localhost")
+            POSTGRES_PORT = os.getenv("POSTGRES_PORT", 5432)
+            POSTGRES_DATABASE = os.getenv("POSTGRES_DATABASE", "mydb")
+            POSTGRES_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVER}:{POSTGRES_PORT}/{POSTGRES_DATABASE}"
+
+step 4:
+    database.py banayo
+        yesma:
+            engine = create_engine(SQLALCHEMY_DATABASE_URL)
+            #engine banyo
+
+            SessionLocal = sessionmaker(bind=engine)
+            #session ra engine bind bhayo
+
+            Base = declarative_base()
+            #Base banau
+
+step 5:
+    models.py banayo tablename and all halnu
+    yesma table related sabi kura garnae
+        yesma:
+            table name define ra euta column with primary key hunai parcha
+            -main ma:
+                database bata engine import
+                models bata Base:
+                    kinaki models ma table defined cha
+
+                    The problem is if you have multiple models
+                    you cannot import from each mode as Base,
+                    so you need to import all models first in the main
+                    and then import Base from database then it will work
+
+            -Base.metadata.create_all(bind=engine)
+            base lai engine database sanga connect garako
+            app run garyo tabale create garnu lai
+            schema=>public=>Table ma user banyo
+                as def in models`s User class
+                    Column 2ta id ra email bancha
+        ##to connect sqlite database instead of POSTGRESQL,, omit :
+            SQLALCHEMY_DATABASE_URL = setting.DATABASE_URL
+            &
+            engine = create_engine(SQLALCHEMY_DATABASE_URL)
+        ##Instead write
+              ##SQLALCHEMY_DATABASE_URL = 'sqlite:///.db'
+              ##engine = create_engine(SQLALCHEMY_DATABASE_URL,
+                    connect_args = {"check_same_thread" : False})
+
+step 6:
+    #setting relationship in table
+    #in models.py
+    Pg admin ma gayaera Database ko tables delete garyo
+    User table ma password and is_active added
+    relationship call bhayo sqlalchemy.orm bata
+        ani User class ma:
+            items = relationship("Items", back_populates='owner')
+                back_populates='owner' lae Items lai owner sanga relationship set garyo
+        ani Items class ma:
+            owner = relationship("User",back_populates='items')
+                back_populates='User' lae Items lai items sanga relationship set garyo
+        we did set relation ship btn table user and items
+
+    running uvicorn created items and users table,, check pg admin for detail
+
+
+step 7:
+    #password hashing
+    pip install passlib[bcrypt]
+    pip install pydantic[email]
+
+    hashing.py created
+
+    pwd_context = CryptContext(schemes='bcrypt', deprecated="auto")
+        using hashing algorithm bcrypt
+            can use
+                sha256_crypt, md5..., des_crypt...
+
+    class hasher banayo, CryptContext bolayaera
+           @staticmethod
+           def get_hash_password(plain_password):
+             return pwd_context.hash(plain_password)
+                 --take the hashed pw
+
+           @staticmethod
+           def verify_password(plain_password, hash_password):
+              return pwd_context.verify(plain_password, hash_password)
+                    --verify em
+
+    now python console
+            from hashing import Hasher
+            Hasher.get_hash_password("mypassword")
+                yestai sth aaucha
+                    '$2b$12$S7EFHBUfe9qOeI4sxds7aecaAETUCrLiIs19HOOXKTk5iEDeEvoeK'
+            Hasher.verify_password("mypassword", "$2b$12$S7EFHBUfe9qOeI4sxds7aecaAETUCrLiIs19HOOXKTk5iEDeEvoeK")
+                (plainpw, hash)
+
+                returns
+                    True//False(if mistake)
+
+step 7:
+    created schemas.py
+        EmailStr, BaseModel pydantic bata bolayo
+        UserCreate(BaseModel) class ma:
+            email/pw haru define bhayo
+
+
+    main.py ma:
+        UserCreate lai schemas bata bolayo
+
+        code added:
+            @app.post("/users", tags=['user'])
+            def create_user(user: UserCreate):
+                Try and remove it
+                    print(user.email)
+                    print(user.password)
+
+                        uvicorn run
+                            post/user ma email and pw halanae
+                            execute ma null
+                            pycharm ma i/p garya usr and pw aaucha
+                passed so delete
+
+    in database.py add:
+            #dependency injection
+            def get_db() -> Generator:
+                 try:
+                    db = SessionLocal()
+                    ## created db object
+                    yield db
+                    ## return db
+                 finally:
+                     db.close()
+
+    in main.py
+        import User from models
+        import Hasher from hashing
+        import get_db from database
+        import Session from sqlalchemy.orm
+        import Depends from fastapi
+        after:
+            @app.post("/users", tags=['user'])
+            add:
+                def create_user(
+                     user: UserCreate,
+                     db:Session=Depends(get_db)
+                ):
+                    user = User(
+                        email=user.email,
+                        password=Hasher.get_hash_password(user.password)
+                    )
+                    db.add(user)
+                    db.commit()
+                    db.refresh(user)
+                    return user
+
+        now, run uvicorn
+
+        local:8000/docs ko
+            post/users ma:
+                email and pw halnae
+                o/p:
+                    {
+                      "is_active": true,
+                      "id": 1,
+                      "email": "mail@email.com",
+                      "password": "$2b$12$QhGuew./BI./MkrRksbitOubMTygdHU6OjmNhZheC.raqgcxk9ILK"
+                    }
+    aba pgdamin ma
+    database/testing/Schemas/public/tables/users:
+        yesma new info aaucha agi halya mail/pw
+
+
+step 8:
+    routes milauna routers folder banayo
+    __init.py__ banayo package banauna
+
+    users.py banayo user related route ko lai
+         main ma bhako sabai /users copied into
+            code:
+                from fastapi import APIRouter, Depends
+                from sqlalchemy.orm import Session
+                from schemas import UserCreate
+                from database import get_db
+                from hashing import Hasher
+                from models import User
+
+                router = APIRouter()
+
+                @router.get(
+                    "/users",
+                    tags=['user'],
+                )
+                ##tags=["..."] to manage kun tag ma halnae
+                def get_user():
+                    return {"message": "hello user"}
+
+                @router.post(
+                    "/users",
+                    tags=['user'],
+                )
+                def create_user(
+                        user: UserCreate,
+                        db: Session = Depends(get_db)
+                ):
+                    user = User(
+                        email=user.email,
+                        password=Hasher.get_hash_password(user.password)
+                    )
+                    db.add(user)
+                    db.commit()
+                    db.refresh(user)
+                    return user
+
+    aba mathi ko import main.py bata hataunae
+    now,
+        to reference all these
+    in main.py import users from routers
+        app = fastapi ko tala
+            code:
+                app.include_router(users.router)
+
+    aba make items.py in router folder
+        just like above
+            code:
+                from fastapi import APIRouter
+
+
+                router = APIRouter()
+
+
+                @router.get('/items', tags=["product"])
+                def get_product():
+                    return {"message": "product"}
+
+    Now,
+        to reference all these
+    in main.py import items from routers
+        app.include_router(users.router) ko tala,
+            code:
+                app.include_router(items.router)
+
+    trim and clean main.py
+    restart server
+        try:
+            get/users
+            post/users
+            after adding new user final check in pgadmin
+
+
+step 9:
+    Na chainae data user lai display na garnu ko lai
+    schemas.py ma add:
+        code:
+            class ShowUser(BaseModel):
+            email: EmailStr
+            is_active: bool
+                class Config:
+                    ##config banayaena bhana dictionary sth.. error aaucha
+                    orm_mode=True
+                    ##orm object relationship mapper
+                    ##object lai dictionary banayo
+
+        ShowUser lae aba email ra is_active matra show garcha
+    aba,
+    users.py ma:
+        import ShowUsers from schemas
+            code:
+                @router.post(
+                    "/users",
+                    tags=['user']
+                )
+
+            yeslai make:
+
+                @router.post(
+                    "/users",
+                    tags=['user'],
+                    response_model=ShowUser
+                )
+
+
+    uvicorn...
+        response:
+            {
+              "email": "mail3@email.com",
+              "is_active": true
+            }
+
+        specially password return na garnu lai yo
+        here unnecessary kura aayaena
+
+
+step 10:
+        tests carried out, check /testing/notes_testing
+
+
+step 11:
