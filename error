@@ -1,0 +1,107 @@
+(venv) PS D:\work\pythonProject\fastapiTest> pytest -v
+====================================================================== test session starts =======================================================================
+platform win32 -- Python 3.10.8, pytest-7.1.3, pluggy-1.0.0 -- D:\work\pythonProject\fastapiTest\venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\work\pythonProject\fastapiTest
+plugins: anyio-3.6.2
+collected 1 item
+
+tests/test_userroute.py::test_create_user FAILED                                                                                                            [100%]
+
+============================================================================ FAILURES ============================================================================
+________________________________________________________________________ test_create_user ________________________________________________________________________
+
+    def test_create_user():
+        data = {"email": "test1@email.com", "password": "test1"}
+            #providing dummy data
+>       response = client.post("/users", json.dumps(data))
+
+tests\test_userroute.py:51:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv\lib\site-packages\requests\sessions.py:635: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+venv\lib\site-packages\starlette\testclient.py:473: in request
+    return super().request(
+venv\lib\site-packages\requests\sessions.py:587: in request
+    resp = self.send(prep, **send_kwargs)
+venv\lib\site-packages\requests\sessions.py:701: in send
+    r = adapter.send(request, **kwargs)
+venv\lib\site-packages\starlette\testclient.py:267: in send
+    raise exc
+venv\lib\site-packages\starlette\testclient.py:264: in send
+    portal.call(self.app, scope, receive, send)
+venv\lib\site-packages\anyio\from_thread.py:283: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+C:\Users\Green-hp\AppData\Local\Programs\Python\Python310\lib\concurrent\futures\_base.py:458: in result
+    return self.__get_result()
+C:\Users\Green-hp\AppData\Local\Programs\Python\Python310\lib\concurrent\futures\_base.py:403: in __get_result
+    raise self._exception
+venv\lib\site-packages\anyio\from_thread.py:219: in _call_func
+    retval = await retval
+venv\lib\site-packages\fastapi\applications.py:270: in __call__
+    await super().__call__(scope, receive, send)
+venv\lib\site-packages\starlette\applications.py:124: in __call__
+    await self.middleware_stack(scope, receive, send)
+venv\lib\site-packages\starlette\middleware\errors.py:184: in __call__
+    raise exc
+venv\lib\site-packages\starlette\middleware\errors.py:162: in __call__
+    await self.app(scope, receive, _send)
+venv\lib\site-packages\starlette\middleware\exceptions.py:75: in __call__
+    raise exc
+venv\lib\site-packages\starlette\middleware\exceptions.py:64: in __call__
+    await self.app(scope, receive, sender)
+venv\lib\site-packages\fastapi\middleware\asyncexitstack.py:21: in __call__
+    raise e
+venv\lib\site-packages\fastapi\middleware\asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+venv\lib\site-packages\starlette\routing.py:680: in __call__
+    await route.handle(scope, receive, send)
+venv\lib\site-packages\starlette\routing.py:275: in handle
+    await self.app(scope, receive, send)
+venv\lib\site-packages\starlette\routing.py:65: in app
+    response = await func(request)
+venv\lib\site-packages\fastapi\routing.py:221: in app
+    solved_result = await solve_dependencies(
+venv\lib\site-packages\fastapi\dependencies\utils.py:497: in solve_dependencies
+    use_sub_dependant = get_dependant(
+venv\lib\site-packages\fastapi\dependencies\utils.py:281: in get_dependant
+    endpoint_signature = get_typed_signature(call)
+venv\lib\site-packages\fastapi\dependencies\utils.py:249: in get_typed_signature
+    signature = inspect.signature(call)
+C:\Users\Green-hp\AppData\Local\Programs\Python\Python310\lib\inspect.py:3250: in signature
+    return Signature.from_callable(obj, follow_wrapped=follow_wrapped,
+C:\Users\Green-hp\AppData\Local\Programs\Python\Python310\lib\inspect.py:2998: in from_callable
+    return _signature_from_callable(obj, sigcls=cls,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+obj = <generator object override_get_db at 0x00000259921566C0>
+
+    def _signature_from_callable(obj, *,
+                                 follow_wrapper_chains=True,
+                                 skip_bound_arg=True,
+                                 globals=None,
+                                 locals=None,
+                                 eval_str=False,
+                                 sigcls):
+
+        """Private helper function to get signature for arbitrary
+        callable objects.
+        """
+
+        _get_signature_of = functools.partial(_signature_from_callable,
+                                    follow_wrapper_chains=follow_wrapper_chains,
+                                    skip_bound_arg=skip_bound_arg,
+                                    globals=globals,
+                                    locals=locals,
+                                    sigcls=sigcls,
+                                    eval_str=eval_str)
+
+        if not callable(obj):
+>           raise TypeError('{!r} is not a callable object'.format(obj))
+E           TypeError: <generator object override_get_db at 0x00000259921566C0> is not a callable object
+
+C:\Users\Green-hp\AppData\Local\Programs\Python\Python310\lib\inspect.py:2395: TypeError
+==================================================================== short test summary info =====================================================================
+FAILED tests/test_userroute.py::test_create_user - TypeError: <generator object override_get_db at 0x00000259921566C0> is not a callable object
+======================================================================= 1 failed in 1.53s ========================================================================
+(venv) PS D:\work\pythonProject\fastapiTest>
