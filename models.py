@@ -1,28 +1,13 @@
 from database import Base
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, Float, Text, Integer
 
+class Product(Base):
+    __tablename__='products'
+    id=Column(Integer,primary_key=True)
+    name=Column(String(255),nullable=False,unique=True)
+    category=Column(Text,nullable=False)
+    price=Column(Float,nullable=False)
 
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, nullable=False, index=True)
-    ##dubai ma index=True na halda ni bhayo
-    password = Column(String, nullable=False)
-    is_active = Column(Boolean, default=True)
-
-    items = relationship("Items", back_populates='owner')
-
-
-class Items(Base):
-    __tablename__ = "items"
-
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False, unique=True)
-    description = Column(String)
-    owner_id = Column(Integer, ForeignKey("users.id"))
-    ##owner id is under the user id ni tha so ^^^^^^
-
-    owner = relationship("User", back_populates='items')
-
+    def __repr__(self):
+        return f"<Product name={self.name} price={self.price}>"
+    
